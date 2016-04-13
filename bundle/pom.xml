@@ -90,6 +90,10 @@
             <artifactId>sqlite-jdbc</artifactId>
             <version>3.8.11.2</version>
         </dependency>
+        <dependency>
+            <groupId>com.day.commons</groupId>
+            <artifactId>day.commons.datasource.poolservice</artifactId>
+        </dependency>
 
     </dependencies>
 

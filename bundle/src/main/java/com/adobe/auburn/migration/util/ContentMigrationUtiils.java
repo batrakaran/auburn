@@ -1,5 +1,7 @@
 package com.adobe.auburn.migration.util;
 
+import com.day.commons.datasource.poolservice.DataSourceNotFoundException;
+import com.day.commons.datasource.poolservice.DataSourcePool;
 import com.day.cq.dam.api.Asset;
 import com.day.cq.dam.api.AssetManager;
 import com.day.cq.dam.api.DamConstants;
@@ -11,8 +13,11 @@ import org.apache.sling.api.resource.ResourceResolver;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.sql.DataSource;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Map;
 
 public class ContentMigrationUtiils {
@@ -36,4 +41,16 @@ public class ContentMigrationUtiils {
         return asset;
 
     }
+
+    public static Connection getConnection(DataSourcePool dspService) throws DataSourceNotFoundException, SQLException {
+
+       // DataSourcePool dspService = sling.getService(DataSourcePool.class);
+        DataSource ds = (DataSource) dspService.getDataSource("sqlite");
+
+        final Connection connection = ds.getConnection();
+
+        return connection;
+
+    }
+
 }

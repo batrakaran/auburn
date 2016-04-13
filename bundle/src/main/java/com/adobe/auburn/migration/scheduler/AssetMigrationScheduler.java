@@ -1,17 +1,22 @@
 package com.adobe.auburn.migration.scheduler;
 
 
+        import com.adobe.auburn.migration.util.ContentMigrationUtiils;
+        import com.day.commons.datasource.poolservice.DataSourceNotFoundException;
+        import com.day.commons.datasource.poolservice.DataSourcePool;
         import org.apache.felix.scr.annotations.*;
         import org.apache.sling.api.SlingConstants;
-        import org.apache.sling.api.resource.LoginException;
-        import org.apache.sling.api.resource.ResourceResolver;
-        import org.apache.sling.api.resource.ResourceResolverFactory;
+        import org.apache.sling.api.resource.*;
         import org.apache.sling.discovery.TopologyEvent;
         import org.apache.sling.discovery.TopologyEventListener;
         import org.apache.sling.event.jobs.JobManager;
         import org.slf4j.Logger;
         import org.slf4j.LoggerFactory;
 
+        import java.sql.Connection;
+        import java.sql.ResultSet;
+        import java.sql.SQLException;
+        import java.sql.Statement;
         import java.util.HashMap;
         import java.util.Map;
 
@@ -49,6 +54,9 @@ public class AssetMigrationScheduler implements Runnable, TopologyEventListener 
     @Reference
     private JobManager jobManager;
 
+    @Reference
+    DataSourcePool dspService;
+
     private boolean isLeader = false;
 
     @Override
@@ -60,10 +68,36 @@ public class AssetMigrationScheduler implements Runnable, TopologyEventListener 
         }
 
         // Scheduled service logic, only run on the Master
-        ResourceResolver adminResourceResolver = null;
+        ResourceResolver resourceResolver = null;
         try {
             // Be careful not to leak the adminResourceResolver
-            adminResourceResolver = resourceResolverFactory.getAdministrativeResourceResolver(null);
+            resourceResolver = resourceResolverFactory.getAdministrativeResourceResolver(null);
+
+
+            // DB conn
+
+            Connection connection = ContentMigrationUtiils.getConnection(dspService);
+            String assetCountPath = "/apps/auburn/components/jdbc/assets";
+            Resource assetCountRes = resourceResolver.getResource(assetCountPath);
+            ModifiableValueMap modifiableValueMap =  assetCountRes.adaptTo(ModifiableValueMap.class);
+            String count = (String) modifiableValueMap.get("startcount");
+
+            String query = "SELECT * from assets";
+            final Statement statement = connection.createStatement();
+            final ResultSet resultSet = statement.executeQuery(query);
+
+            int r=0;
+            while(resultSet.next()){
+                r=r+1;
+
+            }
+            resultSet.close();
+
+            int lastValue = 0;
+            //TODO
+            //iterate the RS
+            //execute jobs
+            //end connection
 
             // execute your scheduled service logic here ...
 
@@ -77,13 +111,16 @@ public class AssetMigrationScheduler implements Runnable, TopologyEventListener 
             // There must be a JobConsumer registered for this Topic
             jobManager.addJob(JOB_NAME, payload);
 
-
-        } catch (LoginException e) {
+            } catch (DataSourceNotFoundException e) {
+                e.printStackTrace();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            } catch (LoginException e) {
             log.error("Error obtaining the admin resource resolver.", e);
         } finally {
             // ALWAYS close resolvers you open
-            if (adminResourceResolver != null) {
-                adminResourceResolver.close();
+            if (resourceResolver != null) {
+                resourceResolver.close();
             }
         }
     }

@@ -10,6 +10,7 @@ import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.day.commons.datasource.poolservice.DataSourcePool;
 
 import javax.jcr.RepositoryException;
 import java.util.HashMap;
@@ -39,6 +40,8 @@ public class MigrateAssetJob implements JobConsumer {
     @Reference
     ResourceResolverFactory resourceResolverFactory;
 
+    @Reference
+    DataSourcePool dspService;
 
     @Override
     public JobResult process(final Job job) {
