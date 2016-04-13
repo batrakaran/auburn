@@ -73,9 +73,7 @@ public class AssetMigrationScheduler implements Runnable, TopologyEventListener 
             // Be careful not to leak the adminResourceResolver
             resourceResolver = resourceResolverFactory.getAdministrativeResourceResolver(null);
 
-
             // DB conn
-
             Connection connection = ContentMigrationUtiils.getConnection(dspService);
             String assetCountPath = "/apps/auburn/components/jdbc/assets";
             Resource assetCountRes = resourceResolver.getResource(assetCountPath);
@@ -83,24 +81,34 @@ public class AssetMigrationScheduler implements Runnable, TopologyEventListener 
             String count = (String) modifiableValueMap.get("startcount");
 
             String query = "SELECT * from assets";
+
             final Statement statement = connection.createStatement();
             final ResultSet resultSet = statement.executeQuery(query);
 
             int r=0;
+            //iterate the RS
             while(resultSet.next()){
                 r=r+1;
 
-            }
-            resultSet.close();
+                //TODO
+                //execute jobs
 
-            int lastValue = 0;
-            //TODO
-            //iterate the RS
-            //execute jobs
+            }
+
+
+
+            //update the count value
+            int updatedValue = Integer.valueOf(count) + 100;
+            modifiableValueMap.put("startcount", updatedValue);
+            resourceResolver.commit();
+
             //end connection
+            resultSet.close();
+            connection.close();
+
+
 
             // execute your scheduled service logic here ...
-
             log.debug(" CreateBrand handleEvent() {}");
             final Map<String, Object> payload = new HashMap<>();
             payload.put(SlingConstants.PROPERTY_PATH, "");
@@ -117,6 +125,8 @@ public class AssetMigrationScheduler implements Runnable, TopologyEventListener 
                 e.printStackTrace();
             } catch (LoginException e) {
             log.error("Error obtaining the admin resource resolver.", e);
+            } catch (PersistenceException e) {
+            e.printStackTrace();
         } finally {
             // ALWAYS close resolvers you open
             if (resourceResolver != null) {
