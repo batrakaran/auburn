@@ -9,4 +9,4 @@
     jdbc.password=""
     jdbc.username="SA"
     pool.max.wait.msec="{Long}1000"
-    pool.size="{Long}21"/>
+    pool.size="{Long}100"/>

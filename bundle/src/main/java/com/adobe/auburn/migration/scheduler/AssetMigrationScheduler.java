@@ -81,8 +81,9 @@ public class AssetMigrationScheduler implements Runnable, TopologyEventListener 
             String assetCountPath = "/apps/auburn/components/jdbc/assets";
             Resource assetCountRes = resourceResolver.getResource(assetCountPath);
             ModifiableValueMap modifiableValueMap =  assetCountRes.adaptTo(ModifiableValueMap.class);
-            String count = (String) modifiableValueMap.get("startcount");
-            Resource parentRes = ResourceUtil.getOrCreateResource(resourceResolver, "/content/dam/auburn/migrated", "nt:folder",null, true);
+           // String count = (String) modifiableValueMap.get("startcount");
+            //Resource parentRes = ResourceUtil.getOrCreateResource(resourceResolver, "/content/dam/auburn/migrated", null ,null, true);
+            Resource parentRes = resourceResolver.getResource("/content/dam/auburn/migrated");
 
             String query = "SELECT * from assets";
 
@@ -110,16 +111,16 @@ public class AssetMigrationScheduler implements Runnable, TopologyEventListener 
                 //TODO
                 //execute jobs
 
+                //end connection
+                resultSet.close();
+                connection.close();
+
             }
 
             //update the count value
-            int updatedValue = Integer.valueOf(count) + 100;
-            modifiableValueMap.put("startcount", Integer.toString(updatedValue));
+            //int updatedValue = Integer.valueOf(count) + 100;
+            //modifiableValueMap.put("startcount", Integer.toString(updatedValue));
             resourceResolver.commit();
-
-            //end connection
-            resultSet.close();
-            connection.close();
 
             // execute your scheduled service logic here ...
             log.debug(" CreateBrand handleEvent() {}");

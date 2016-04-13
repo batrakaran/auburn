@@ -78,7 +78,11 @@ public class MigrateAssetJob implements JobConsumer {
                // Resource parentResource = resourceResolver.getResource(path);
 
                 //TODO... stuff goes here
+                resourceResolver.refresh();
                 Asset asset = createAsset(resourceResolver, job);
+
+                resourceResolver.commit();
+                resourceResolver.refresh();
 
             }
 
