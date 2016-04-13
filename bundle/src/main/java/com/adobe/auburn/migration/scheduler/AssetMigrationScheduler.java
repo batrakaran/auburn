@@ -13,6 +13,7 @@ package com.adobe.auburn.migration.scheduler;
         import org.slf4j.Logger;
         import org.slf4j.LoggerFactory;
 
+        import java.nio.charset.StandardCharsets;
         import java.sql.Connection;
         import java.sql.ResultSet;
         import java.sql.SQLException;
@@ -31,7 +32,7 @@ package com.adobe.auburn.migration.scheduler;
                 label = "Cron expression defining when this Scheduled Service will run",
                 description = "[every minute = 0 * * * * ?] Visit www.cronmaker.com to generate cron expressions.",
                 name = "scheduler.expression",
-                value = "0 1 0 ? * *"
+                value = "0 0/1 * 1/1 * ? *"
         ),
         @Property(
                 label = "Allow concurrent executions",
@@ -67,6 +68,8 @@ public class AssetMigrationScheduler implements Runnable, TopologyEventListener 
             return;
         }
 
+        log.info(" AssetMigrationScheduler  Start {}");
+
         // Scheduled service logic, only run on the Master
         ResourceResolver resourceResolver = null;
         try {
@@ -79,6 +82,7 @@ public class AssetMigrationScheduler implements Runnable, TopologyEventListener 
             Resource assetCountRes = resourceResolver.getResource(assetCountPath);
             ModifiableValueMap modifiableValueMap =  assetCountRes.adaptTo(ModifiableValueMap.class);
             String count = (String) modifiableValueMap.get("startcount");
+            Resource parentRes = ResourceUtil.getOrCreateResource(resourceResolver, "/content/dam/auburn/migrated", "nt:folder",null, true);
 
             String query = "SELECT * from assets";
 
@@ -86,38 +90,39 @@ public class AssetMigrationScheduler implements Runnable, TopologyEventListener 
             final ResultSet resultSet = statement.executeQuery(query);
 
             int r=0;
+            String title, type;
             //iterate the RS
             while(resultSet.next()){
                 r=r+1;
+                title  = resultSet.getString("title");
+                type = resultSet.getString("type");
+                byte[] content = resultSet.getBytes("content");
 
+                final Map<String, Object> payload = new HashMap<>();
+                payload.put("assetName", title);
+                payload.put("assetType", type);
+                String str = new String(content, StandardCharsets.UTF_8);
+                payload.put("inputStream", str);
+                payload.put("parentPath", parentRes.getPath());
+
+                // There must be a JobConsumer registered for this Topic
+                jobManager.addJob(JOB_NAME, payload);
                 //TODO
                 //execute jobs
 
             }
 
-
-
             //update the count value
             int updatedValue = Integer.valueOf(count) + 100;
-            modifiableValueMap.put("startcount", updatedValue);
+            modifiableValueMap.put("startcount", Integer.toString(updatedValue));
             resourceResolver.commit();
 
             //end connection
             resultSet.close();
             connection.close();
 
-
-
             // execute your scheduled service logic here ...
             log.debug(" CreateBrand handleEvent() {}");
-            final Map<String, Object> payload = new HashMap<>();
-            payload.put(SlingConstants.PROPERTY_PATH, "");
-            payload.put("assetName", "payloadTitle");
-            payload.put("assetType", "mimeType");
-            payload.put("inputStream", "blob inputStream");
-
-            // There must be a JobConsumer registered for this Topic
-            jobManager.addJob(JOB_NAME, payload);
 
             } catch (DataSourceNotFoundException e) {
                 e.printStackTrace();

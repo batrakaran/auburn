@@ -60,28 +60,36 @@ public class MigrateAssetJob implements JobConsumer {
 
         ResourceResolver resourceResolver = null;
         try {
-            resourceResolver = resourceResolverFactory.getServiceResourceResolver(authenticationInfo);
+            //resourceResolver = resourceResolverFactory.getServiceResourceResolver(authenticationInfo);
+            resourceResolver =resourceResolverFactory.getAdministrativeResourceResolver(null);
+
             log.debug(resourceResolver.getUserID());
-            String path = (String) job.getProperty(SlingConstants.PROPERTY_PATH);
+
+           // String path = (String) job.getProperty(SlingConstants.PROPERTY_PATH);
            // String pageName = (String) job.getProperty(Constants.PN_NAME);
            // String template = (String) job.getProperty(Constants.PN_TEMPLATE);
            // String pageTitle = (String) job.getProperty(Constants.PN_TITLE);
 
 
-            if(resourceResolver != null && StringUtils.isNotBlank(path)){
+            if(resourceResolver != null){
 
-                log.debug(" path in job {}", path);
+               // log.debug(" path in job {}", path);
 
-                Resource parentResource = resourceResolver.getResource(path);
+               // Resource parentResource = resourceResolver.getResource(path);
 
                 //TODO... stuff goes here
+                Asset asset = createAsset(resourceResolver, job);
 
             }
 
 
             } catch (LoginException e) {
             e.printStackTrace();
-            } finally {
+            } catch (RepositoryException e) {
+            e.printStackTrace();
+        } catch (PersistenceException e) {
+            e.printStackTrace();
+        } finally {
             if (resourceResolver != null && resourceResolver.isLive()) {
                 resourceResolver.close();
             }
@@ -101,10 +109,12 @@ public class MigrateAssetJob implements JobConsumer {
 
     public static Asset createAsset(ResourceResolver resourceResolver, final Job job) throws PersistenceException, RepositoryException {
 
-        Resource rootFolderRes = null;
-        String assetName = "";
-        String inputStream = "";
-        String assetType = "";
+        String  parentPath = (String) job.getProperty("parentPath");
+        String assetName = (String) job.getProperty("assetName");
+        String inputStream = (String) job.getProperty("inputStream");
+        String assetType = (String) job.getProperty("assetType");
+
+        Resource rootFolderRes = resourceResolver.getResource(parentPath);
 
         return ContentMigrationUtiils.createAssetInDAM(resourceResolver, rootFolderRes, assetName, inputStream, assetType);
     }
