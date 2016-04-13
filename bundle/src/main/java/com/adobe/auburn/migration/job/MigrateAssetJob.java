@@ -1,17 +1,17 @@
 package com.adobe.auburn.migration.job;
 
+import com.adobe.auburn.migration.util.ContentMigrationUtiils;
+import com.day.cq.dam.api.Asset;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.scr.annotations.*;
 import org.apache.sling.api.SlingConstants;
-import org.apache.sling.api.resource.LoginException;
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.api.resource.*;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jcr.RepositoryException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -95,5 +95,16 @@ public class MigrateAssetJob implements JobConsumer {
          */
         return JobResult.OK;
     }
+
+    public static Asset createAsset(ResourceResolver resourceResolver, final Job job) throws PersistenceException, RepositoryException {
+
+        Resource rootFolderRes = null;
+        String assetName = "";
+        String inputStream = "";
+        String assetType = "";
+
+        return ContentMigrationUtiils.createAssetInDAM(resourceResolver, rootFolderRes, assetName, inputStream, assetType);
+    }
+
 
 }

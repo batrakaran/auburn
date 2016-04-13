@@ -70,9 +70,9 @@ public class AssetMigrationScheduler implements Runnable, TopologyEventListener 
             log.debug(" CreateBrand handleEvent() {}");
             final Map<String, Object> payload = new HashMap<>();
             payload.put(SlingConstants.PROPERTY_PATH, "");
-           // payload.put(Constants.PN_TEMPLATE, "");
-           // payload.put(Constants.PN_NAME, "");
-           // payload.put(Constants.PN_TITLE, "");
+            payload.put("assetName", "payloadTitle");
+            payload.put("assetType", "mimeType");
+            payload.put("inputStream", "blob inputStream");
 
             // There must be a JobConsumer registered for this Topic
             jobManager.addJob(JOB_NAME, payload);
